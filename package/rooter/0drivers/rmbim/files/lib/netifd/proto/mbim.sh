@@ -61,7 +61,7 @@ get_connect() {
 get_sub() {
 	log "Checking subscriber"
 	tid=$((tid + 1))
-	SUB=$(umbim -n -t $tid -d $device subscriber)
+	SUB=$(umbim $DBG -n -t $tid -d $device subscriber)
 	retq=$?
 	if [ $retq -ne 0 ]; then
 		log "Subscriber init failed"
@@ -170,11 +170,14 @@ _proto_mbim_setup() {
 	}
 
 	log "Reading capabilities"
-	DCAPS=$(umbim $DBG -n -d $device caps)
+	tid=$((tid + 1))
+	DCAPS=$(umbim $DBG -n -t $tid -d $device caps)
 	retq=$?
 	if [ $retq -ne 0 ]; then
 
 		log "Failed to read modem caps"
+		tid=$((tid + 1))
+		umbim $DBG -t $tid -d "$device" disconnect
 		proto_notify_error "$interface" PIN_FAILED
 		return 1
 	fi
@@ -193,14 +196,14 @@ _proto_mbim_setup() {
 
 	log "Checking PIN state"
 	tid=$((tid + 1))
-	umbim -n -t $tid -d $device pinstate
+	umbim $DBG -n -t $tid -d $device pinstate
 	retq=$?
 	if [ $retq -eq 2 ]; then
 		log "PIN is required"
 		if [ ! -z $pincode ]; then
 			log "Sending PIN"
 			tid=$((tid + 1))
-			umbim -n -t $tid -d $device unlock "$pincode" 2>/dev/null
+			umbim $DBG -n -t $tid -d $device unlock "$pincode" 2>/dev/null
 			retq=$?
 			if [ $retq -ne 0 ]; then
 				log "PIN unlock failed"
@@ -246,7 +249,7 @@ _proto_mbim_setup() {
 	tid=$((tid + 1))
 
 	log "Attach to network"
-	ATTACH=$(umbim -n -t $tid -d $device attach)
+	ATTACH=$(umbim $DBG -n -t $tid -d $device attach)
 	retq=$?
 	if [ $retq != 0 ]; then
 		log "Failed to attach to network"
@@ -255,6 +258,8 @@ _proto_mbim_setup() {
 	fi
 	UP=$(echo "$ATTACH" | awk '/uplinkspeed:/ {print $2}')
 	DOWN=$(echo "$ATTACH" | awk '/downlinkspeed:/ {print $2}')
+
+	tid=$((tid + 1))
 
 	log "Connect to network using $apn"
 	tidd=0
@@ -290,6 +295,7 @@ _proto_mbim_setup() {
 	}
 
 	IP=$(echo -e "$CONFIG"|grep "ipv4address"|grep -E -o "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)")
+	GATE=$(echo -e "$CONFIG"|grep "ipv4gateway"|grep -E -o "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)")
 	DNS1=$(echo -e "$CONFIG"|grep "ipv4dnsserver"|grep -E -o "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" |sed -n 1p)
 	DNS2=$(echo -e "$CONFIG"|grep "ipv4dnsserver"|grep -E -o "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" |sed -n 2p)
 	if [ $enb = "1" ]; then
@@ -297,6 +303,7 @@ _proto_mbim_setup() {
 		DNS3=$(echo "$CONFIG" | awk '/ipv6dnsserver:/ {print $2}' | sed -n 1p)
 		DNS4=$(echo "$CONFIG" | awk '/ipv6dnsserver:/ {print $2}' | sed -n 2p)
 	fi
+	echo "$GATE" > /tmp/mbimgateway
 
 	[ -n "$IP" ] && echo "IP: $IP"
 	[ -n "$DNS1" ] && echo "DNS1: $DNS1"
