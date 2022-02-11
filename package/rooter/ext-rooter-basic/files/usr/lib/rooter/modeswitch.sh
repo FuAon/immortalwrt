@@ -185,17 +185,23 @@ if [ "$ACTION" = add ]; then
 #
 # Ignore Ethernet adapters
 #
-	if [ $idV = 13b1 -a $idP = 0041 ]; then
+	if [ $uVid = 13b1 -a $uPid = 0041 ]; then
 		exit 0
-	elif [ $idV = 2357 -a $idP = 0601 ]; then
+	elif [ $uVid = 2357 -a $uPid = 0601 ]; then
 		exit 0
-	elif [ $idV = 0b95 -a $idP = 772b ]; then
+	elif [ $uVid = 0b95 -a $uPid = 772b ]; then
 		exit 0
-	elif [ $idV = 0b95 -a $idP = 1790 ]; then
+	elif [ $uVid = 0b95 -a $uPid = 1790 ]; then
 		exit 0
-	elif [ $idV = 0bda -a $idP = 8152 ]; then
+	elif [ $uVid = 0bda -a $uPid = 8152 ]; then
 		exit 0
 	fi
+
+	bNumConfs=$(cat /sys/bus/usb/devices/$DEVICENAME/bNumConfigurations)
+	bNumIfs=$(cat /sys/bus/usb/devices/$DEVICENAME/bNumInterfaces)
+
+	# Uncomment the next line to ignore USB-Serial adapters and similar single-port devices
+	# if [ $bNumConfs = 1 -a $bNumIfs = 1 ] && exit 0		
 
 	cat /sys/kernel/debug/usb/devices > /tmp/wdrv
 	lua $ROOTER/protofind.lua $uVid $uPid 0
@@ -288,9 +294,6 @@ if [ "$ACTION" = add ]; then
 		CURRMODEM=$MODSTART
 	fi
 
-	idV=$uVid
-	idP=$uPid
-
 	FILEN=$uVid:$uPid
 	display_top; display "Start of Modem Detection and Connection Information"
 	display "Product=${uPr:-?} $uVid $uPid"; display_bottom
@@ -304,7 +307,6 @@ if [ "$ACTION" = add ]; then
 
 	while : ; do
 		bConfig=$(cat /sys/bus/usb/devices/$DEVICENAME/bConfigurationValue)
-		bNumConfs=$(cat /sys/bus/usb/devices/$DEVICENAME/bNumConfigurations)
 		if [ -n "$bConfig" -a -n "$bNumConfs" ]; then
 			log "Found Modem at $DEVICENAME in Cfg#= $bConfig from $bNumConfs available"
 			break
@@ -334,7 +336,6 @@ if [ "$ACTION" = add ]; then
 					change_bconf $DEVICENAME $bestcfg QMI
 					;;
 				"2" )
-					bNumIfs=$(cat /sys/bus/usb/devices/$DEVICENAME/bNumInterfaces)
 					if [ $bNumIfs -lt 4 ]; then
 						change_bconf $DEVICENAME $bestcfg QMI
 					fi
