@@ -124,7 +124,6 @@ set_dns2() {
 	uci set network.wan$INTER.dns="$bDNS"
 }
 
-
 check_apn() {
 	IPVAR="IP"
 	local COMMPORT="/dev/ttyUSB"$CPORT
@@ -161,8 +160,9 @@ check_apn() {
 			OX=$($ROOTER/gcom/gcom-locked "$COMMPORT" "run-at.gcom" "$CURRMODEM" "AT+CFUN=1")
 		fi
 	else
-		ATCMDD="AT+CGDCONT=$CID,\"$IPVAR\",\"$NAPN\";+CFUN=$CFUNOFF"
+		ATCMDD="AT+CGDCONT=$CID,\"$IPVAR\",\"$NAPN\""
 		OX=$($ROOTER/gcom/gcom-locked "$COMMPORT" "run-at.gcom" "$CURRMODEM" "$ATCMDD")
+		OX=$($ROOTER/gcom/gcom-locked "$COMMPORT" "run-at.gcom" "$CURRMODEM" "AT+CFUN=$CFUNOFF")
 		OX=$($ROOTER/gcom/gcom-locked "$COMMPORT" "run-at.gcom" "$CURRMODEM" "AT+CFUN=1")
 		sleep 5
 	fi
@@ -431,15 +431,26 @@ else
 		DELAY=5
 	fi
 
-#
-# QMI, NCM and MBIM use cdc-wdm
-#
-
 rm -f /tmp/usbwait
 
 MATCH="$(uci get modem.modem$CURRMODEM.maxcontrol | cut -d/ -f3- | xargs dirname)"
 
 case $PROT in
+	# Sierra Direct-IP data interface
+	
+	"1" )
+	OX="$(for a in /sys/class/net/*; do readlink $a; done | grep "$MATCH")"
+	ifname=$(basename $OX)
+	WWANX=$(echo $ifname | grep -o "[[:digit:]]")
+	log "Modem $CURRMODEM Sierra Direct-IP Device : $ifname"
+	
+	uci set modem.modem$CURRMODEM.wwan=$WWANX
+	uci set modem.modem$CURRMODEM.interface=$ifname
+	uci commit modem
+	;;
+
+	# QMI, NCM and MBIM use cdc-wdm
+
 	"2"|"3"|"30"|"4"|"6"|"7" )
 	OX="$(for a in /sys/class/usbmisc/*; do readlink $a; done | grep "$MATCH")"
 	devname=$(basename $OX)
@@ -799,6 +810,7 @@ if [ -n "$CHKPORT" ]; then
 	export SETPASS=$NPASS
 	export SETAUTH=$NAUTH
 	export PINCODE=$PINC
+
 	if [ $idV = 12d1 ]; then
 		OX=$($ROOTER/gcom/gcom-locked "/dev/ttyUSB$CPORT" "curc.gcom" "$CURRMODEM")
 		log "Huawei Unsolicited Responses Disabled"
@@ -910,7 +922,7 @@ while [ 1 -lt 6 ]; do
 			fi
 			M7=$(echo "$OX" | sed -e "s/SCACT:/SCACT: /;s!  ! !g")
 			SCACT="!SCACT: 1,1"
-			if `echo $M7 | grep "$SCACT" 1>/dev/null 2>&1`
+			if `echo ${M7} | grep "$SCACT" 1>/dev/null 2>&1`
 			then
 				BRK=0
 				ifup wan$INTER
@@ -1025,9 +1037,6 @@ while [ 1 -lt 6 ]; do
 # Fibocom NCM connect
 #
 	"28" )
-		. /lib/functions.sh
-		. /lib/netifd/netifd-proto.sh
-		MATCH="$(uci get modem.modem$CURRMODEM.maxcontrol | cut -d/ -f3- | xargs dirname)"
 		OX="$(for a in /sys/class/net/*; do readlink $a; done | grep "$MATCH" | grep ".6/net/")"
 		ifname=$(basename $OX)
 		log "Modem $CURRMODEM Fibocom NCM Data Port : $ifname"
