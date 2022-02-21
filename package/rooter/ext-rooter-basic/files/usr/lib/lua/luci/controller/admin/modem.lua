@@ -3,7 +3,7 @@ module("luci.controller.admin.modem", package.seeall)
 function index()
 	entry({"admin", "modem"}, firstchild(), "模组管理", 25).dependent=false
 --	entry({"admin", "modem", "cinfo"}, cbi("rooter/connection", {autoapply=true}), "Connection Info", 10)
---	entry({"admin", "modem", "prof"}, cbi("rooter/profiles"), "Connection Profile", 2)
+	entry({"admin", "modem", "prof"}, cbi("rooter/profiles"), "Connection Profile", 2)
 --	entry({"admin", "modem", "conmon"}, cbi("rooter/connmonitor"), "Connection Monitoring", 20)
 	entry({"admin", "modem", "nets"}, template("rooter/net_status"), "基站信息/信号状态", 30)
 	entry({"admin", "modem", "debug"}, template("rooter/debug"), "调试信息", 50)
