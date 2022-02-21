@@ -17,11 +17,13 @@ sub target_config_features(@) {
 		/^display$/ and $ret .= "\tselect DISPLAY_SUPPORT\n";
 		/^dt$/ and $ret .= "\tselect USES_DEVICETREE\n";
 		/^dt-overlay$/ and $ret .= "\tselect HAS_DT_OVERLAY_SUPPORT\n";
+		/^emmc$/ and $ret .= "\tselect EMMC_SUPPORT\n";
 		/^ext4$/ and $ret .= "\tselect USES_EXT4\n";
 		/^fpu$/ and $ret .= "\tselect HAS_FPU\n";
 		/^gpio$/ and $ret .= "\tselect GPIO_SUPPORT\n";
 		/^jffs2$/ and $ret .= "\tselect USES_JFFS2\n";
 		/^jffs2_nand$/ and $ret .= "\tselect USES_JFFS2_NAND\n";
+		/^legacy-sdcard$/ and $ret .= "\tselect LEGACY_SDCARD_SUPPORT\n";
 		/^low_mem$/ and $ret .= "\tselect LOW_MEMORY_FOOTPRINT\n";
 		/^minor$/ and $ret .= "\tselect USES_MINOR\n";
 		/^mips16$/ and $ret .= "\tselect HAS_MIPS16\n";
@@ -36,7 +38,6 @@ sub target_config_features(@) {
 		/^rfkill$/ and $ret .= "\tselect RFKILL_SUPPORT\n";
 		/^rootfs-part$/ and $ret .= "\tselect USES_ROOTFS_PART\n";
 		/^rtc$/ and $ret .= "\tselect RTC_SUPPORT\n";
-		/^sdcard$/ and $ret .= "\tselect SDCARD_SUPPORT\n";
 		/^separate_ramdisk$/ and $ret .= "\tselect USES_INITRAMFS\n\tselect USES_SEPARATE_INITRAMFS\n";
 		/^small_flash$/ and $ret .= "\tselect SMALL_FLASH\n";
 		/^spe_fpu$/ and $ret .= "\tselect HAS_SPE_FPU\n";
