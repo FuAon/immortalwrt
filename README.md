@@ -4,8 +4,8 @@
 git clone -b openwrt-21.02 https://github.com/FuAon/immortalwrt
 git apply 6526.patch
 ./scripts/feeds update -a && ./scripts/feeds install -a
-make download -j8 V=s
 make menuconfig
+make download -j8 V=s
 make -j1 V=s
 ```
 
