@@ -1,3 +1,14 @@
+# How to compile
+
+```
+git clone -b openwrt-21.02 https://github.com/FuAon/immortalwrt
+git apply 6526.patch
+./scripts/feeds update -a && ./scripts/feeds install -a
+make download -j8 V=s
+make menuconfig
+make -j1 V=s
+```
+
 <img src="https://avatars.githubusercontent.com/u/53193414?s=200&v=4" alt="logo" width="200" height="200" align="right">
 
 # Project ImmortalWrt
