@@ -133,6 +133,9 @@ define Package/cypress-firmware-43455-sdio/install
 	$(INSTALL_DATA) \
 		$(PKG_BUILD_DIR)/firmware/cyfmac43455-sdio.clm_blob \
 		$(1)/lib/firmware/brcm/brcmfmac43455-sdio.clm_blob
+	$(INSTALL_DATA) \
+		./files/lib/firmware/brcm/brcmfmac43455-sdio.unknown,tn3399-v3.conf \
+		$(1)/lib/firmware/brcm/brcmfmac43455-sdio.unknown,tn3399-v3.conf
 endef
 
 $(eval $(call BuildPackage,cypress-firmware-43455-sdio))

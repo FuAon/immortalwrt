@@ -23,6 +23,22 @@ endef
 define Build/boot-script
 	# Make an U-boot image and copy it to the boot partition
 	mkimage -A arm -O linux -T script -C none -a 0 -e 0 -d $(if $(1),$(1),mmc).bootscript $@.boot/boot.scr
+	mkimage -A arm -O linux -T script -C none -a 0 -e 0 -d mmc.bootscript.tty1 $@.boot/boot.scr.tty1
+	mkimage -A arm -O linux -T script -C none -a 0 -e 0 -d mmc.bootscript.uas $@.boot/boot.scr.ttyS2.uas
+	mkimage -A arm -O linux -T script -C none -a 0 -e 0 -d mmc.bootscript.tty1.uas $@.boot/boot.scr.tty1.uas
+	mv $@.boot/boot.scr $@.boot/boot.scr.ttyS2
+	ln $@.boot/boot.scr.ttyS2.uas $@.boot/boot.scr
+endef
+
+define Build/radxa-img
+	$(SCRIPT_DIR)/gen_image_generic.sh \
+		$@ \
+		$(CONFIG_TARGET_KERNEL_PARTSIZE) $@.boot \
+		$(CONFIG_TARGET_ROOTFS_PARTSIZE) $(IMAGE_ROOTFS) \
+		16384
+
+	dd if="$(STAGING_DIR_IMAGE)"/$(UBOOT_DEVICE_NAME)-idbloader.img of="$@" seek=64 conv=notrunc
+	dd if="$(STAGING_DIR_IMAGE)"/$(UBOOT_DEVICE_NAME)-u-boot.itb of="$@" seek=16384 conv=notrunc
 endef
 
 define Build/pine64-img
